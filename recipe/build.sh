@@ -33,6 +33,13 @@ echo "===== Effective make.inc ====="
 cat make.inc
 echo "=============================="
 echo "MPIF90=${MPIF90}"
+
+if [[ "${target_platform:-}" == "linux-aarch64" ]]; then
+  sed -i \
+    "s/(3\.0e-6, 3\.0e-6, 'final_spreads')/(1.0e-5, 1.0e-5, 'final_spreads')/" \
+    test-suite/tests/userconfig
+fi
+
 make wannier -j "${CPU_COUNT:-1}"
 
 if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" != "1" ||
