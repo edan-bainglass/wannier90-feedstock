@@ -12,19 +12,14 @@ COMMS = mpi
 MPIF90 = ${PREFIX}/bin/mpif90
 EOF
 
-# Wannier90's MPI wrapper routines may trigger strict argument-mismatch errors with
-# modern gfortran, so append the compatibility flag for such cases.
-if [[ "${FC:-}" == *gfortran* ]] && ! grep -q -- '-fallow-argument-mismatch' make.inc; then
-  # Using a platform-safe version of sed to avoid issues with BSD sed on macOS.
-  sed 's|^FCOPTS = .*|& -fallow-argument-mismatch|' make.inc > make.inc.tmp && mv make.inc.tmp make.inc
+# Wannier90's MPI wrapper routines may trigger strict argument-mismatch errors
+# with modern gfortran.
+if [[ "${FC:-}" == *gfortran* ]] &&
+   ! grep -q -- '-fallow-argument-mismatch' make.inc; then
+  sed 's|^FCOPTS = .*|& -fallow-argument-mismatch|' \
+    make.inc > make.inc.tmp
+  mv make.inc.tmp make.inc
 fi
-
-make wannier -j "${CPU_COUNT:-1}"
-
-# TODO this breaks compilation - TBD
-# if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" != "1" ]]; then
-#   make test-serial -j "${CPU_COUNT:-1}"
-# fi
 
 echo "===== Effective make.inc ====="
 cat make.inc
