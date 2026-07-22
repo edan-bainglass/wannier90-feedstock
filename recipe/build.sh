@@ -5,11 +5,19 @@ set -euxo pipefail
 cp "${RECIPE_DIR}/make.inc" "${SRC_DIR}/make.inc"
 cd "${SRC_DIR}"
 
-# MPI support
+# During an OpenMPI cross-build, mpif90 must be executable on the build
+# platform, while resolving headers and libraries from the host prefix.
+if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" == "1" ]]; then
+  export OPAL_PREFIX="${PREFIX}"
+  MPIF90="${BUILD_PREFIX}/bin/mpif90"
+else
+  MPIF90="${PREFIX}/bin/mpif90"
+fi
+
 cat >> make.inc <<EOF
 
 COMMS = mpi
-MPIF90 = ${PREFIX}/bin/mpif90
+MPIF90 = ${MPIF90}
 EOF
 
 # Wannier90's MPI wrapper routines may trigger strict argument-mismatch errors
@@ -24,5 +32,12 @@ fi
 echo "===== Effective make.inc ====="
 cat make.inc
 echo "=============================="
+echo "MPIF90=${MPIF90}"
+make wannier -j "${CPU_COUNT:-1}"
+
+if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" != "1" ||
+      -n "${CROSSCOMPILING_EMULATOR:-}" ]]; then
+  make test-serial -j "${CPU_COUNT:-1}"
+fi
 
 make install PREFIX="${PREFIX}"

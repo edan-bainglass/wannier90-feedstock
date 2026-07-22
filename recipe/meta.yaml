@@ -22,11 +22,13 @@ requirements:
     - {{ compiler('fortran') }}
     - {{ stdlib("c") }}
     - make
+    - openmpi  # [build_platform != target_platform]
   host:
+    - openmpi
     - libblas
     - liblapack
-    - openmpi >=4.1.6,<5
   run:
+    - openmpi
 
 test:
   commands:
