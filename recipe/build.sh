@@ -15,7 +15,8 @@ EOF
 # Wannier90's MPI wrapper routines may trigger strict argument-mismatch errors with
 # modern gfortran, so append the compatibility flag for such cases.
 if [[ "${FC:-}" == *gfortran* ]] && ! grep -q -- '-fallow-argument-mismatch' make.inc; then
-  sed -i 's|^FCOPTS = .*|& -fallow-argument-mismatch|' make.inc
+  # Using a platform-safe version of sed to avoid issues with BSD sed on macOS.
+  sed 's|^FCOPTS = .*|& -fallow-argument-mismatch|' make.inc > make.inc.tmp && mv make.inc.tmp make.inc
 fi
 
 make wannier -j "${CPU_COUNT:-1}"
